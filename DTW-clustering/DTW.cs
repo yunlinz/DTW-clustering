@@ -25,7 +25,7 @@ namespace DTW_clustering
                     memo[i, j] = dist + Math.Min(Math.Min(memo[i - 1, j], memo[i, j - 1]), memo[i - 1, j - 1]);
                 }
             }
-            return memo[l1, l2];
+            return memo[l1, l2] / Math.Sqrt(Math.Pow(l1, 2) + Math.Pow(l2, 2));
         }
 
         [Test]

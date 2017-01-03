@@ -1,28 +1,33 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Data.SQLite;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using NUnit.Framework;
 
 namespace DTW_clustering
 {
 
     public class DbAccessor
     {
-        public SQLiteConnection DbConnection {
-            get; private set;
-        }
+        public SQLiteConnection PriceDb { get; private set; }
+        public string TickersFile { get; private set; }
+
         public DbAccessor(string source="reits.txt", string dbname = "PricesDb.sqlite")
         {
+            TickersFile = source;
             var dbstring = $"Data Source={dbname};";
             if (!File.Exists(dbname))
             {
                 SQLiteConnection.CreateFile(dbname);
                 const string sqlCreate = "CREATE TABLE prices (date DATETIME, ticker varchar(10), price FLOAT);\n" +
                                           "CREATE INDEX date_index ON prices (date);\n" +
-                                          "CREATE INDEX ticker_index ON prices (ticker);";
+                                          "CREATE INDEX ticker_index ON prices (ticker);\n" +
+                                          "CREATE TABLE dtw (ticker1 VARCHAR(10), ticker2 VARCHAR(10), dtw FLOAT);";
+
                 using (var conn = new SQLiteConnection(dbstring))
                 {
                     conn.Open();
@@ -93,14 +98,46 @@ namespace DTW_clustering
                 }
 
             }
-            DbConnection = new SQLiteConnection(dbname);
-
+            PriceDb = new SQLiteConnection(dbstring);
+            PriceDb.Open();
         }
 
-        public Tuple<double[], double[]> GetPrices(string ticker1, string ticker2)
+        public double[] GetPrices(string ticker)
         {
-
-            return null;
+            var sql = $"SELECT * FROM prices WHERE ticker = '{ticker}' ORDER BY date";
+            var priceList = new List<PriceObject>();
+            using (var comm = new SQLiteCommand(sql, PriceDb))
+            {
+                using (var rd = comm.ExecuteReader())
+                {
+                    while (rd.Read())
+                    {
+                        priceList.Add(new PriceObject()
+                        {
+                            Date = rd.GetDateTime(0),
+                            Ticker = rd.GetString(1),
+                            Price = rd.GetDouble(2)
+                        });
+                    }
+                }
+            }
+            return priceList.Select(p => p.Price).ToArray();
         }
+
+        public void InsertDtw(string ticker1, string ticker2, double value)
+        {
+            var sql = $"INSERT INTO dtw VALUES ('{ticker1}','{ticker2}', {value})";
+            using (var comm = new SQLiteCommand(sql, PriceDb))
+            {
+                comm.ExecuteNonQuery();
+            }
+        }
+    }
+
+    public class PriceObject
+    {
+        public DateTime Date { get; set; }
+        public string Ticker { get; set; }
+        public double Price { get; set; }
     }
 }
