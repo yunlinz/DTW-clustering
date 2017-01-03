@@ -1,17 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Entity.ModelConfiguration.Conventions;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using System.Data.SQLite;
 using System.IO;
 
 namespace DTW_clustering
 {
     internal class Program
     {
-        private static void Main(string[] args)
+        private static void Main()
         {
             var db = new DbAccessor();
             var tickers = new List<string>();
@@ -19,7 +15,7 @@ namespace DTW_clustering
             {
                 while (sr.Peek() >= 0)
                 {
-                    var line = sr.ReadLine().Trim();
+                    var line = sr.ReadLine()?.Trim();
                     if (line == "") break;
                     tickers.Add(line);
                 }
@@ -32,7 +28,7 @@ namespace DTW_clustering
                     {
                         if (t1 == t2) return;
                         var ts2 = PriceToReturns(db.GetPrices(t2));
-                        var dtw = DTW.CalculateDTW(ts1, ts2);
+                        var dtw = DTW.CalculateDtw(ts1, ts2);
                         Console.WriteLine($"DTW for {t1} and {t2} is {dtw}");
                         db.InsertDtw(t1, t2, dtw);
                     });
@@ -40,9 +36,9 @@ namespace DTW_clustering
             );
         }
 
-        private static double[] PriceToReturns(double[] price)
+        private static double[] PriceToReturns(IReadOnlyList<double> price)
         {
-            var l = price.Length;
+            var l = price.Count;
             var returns = new double[l];
             for (var i = 1; i < l; i++)
             {

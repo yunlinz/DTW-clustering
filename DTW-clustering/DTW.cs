@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Linq;
-using System.Security.Cryptography;
 using NUnit.Framework;
 
 namespace DTW_clustering
 {
+    // ReSharper disable once InconsistentNaming
     public class DTW
     {
-        public static double CalculateDTW(double[] ts1, double[] ts2)
+        public static double CalculateDtw(double[] ts1, double[] ts2)
         {
             var l1 = ts1.Length;
             var l2 = ts2.Length;
@@ -49,7 +49,7 @@ namespace DTW_clustering
                         return Math.Sqrt(-2.0 * Math.Log(u1)) * Math.Sin(2.0 * Math.PI * u2);
                     }).ToArray();
                     var watch = System.Diagnostics.Stopwatch.StartNew();
-                    var ans = CalculateDTW(ts1, ts2);
+                    var ans = CalculateDtw(ts1, ts2);
                     Console.WriteLine($"i = {i}, j = {j}, T = {watch.ElapsedMilliseconds}ms, a = {ans}");
                     watch.Reset();
                 }
